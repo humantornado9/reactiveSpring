@@ -80,7 +80,7 @@ public class fluxAndMonoTransformTest {
 
     Flux<String> namesFlux = Flux.fromIterable(names)
       .flatMap(s -> {
-        // this is where you do your LPAS Call
+        // this is where you do your remote web service calls
         return Flux.fromIterable(convert(s));
       })
       .log();
@@ -92,12 +92,12 @@ public class fluxAndMonoTransformTest {
 
   @Test
   public void testFlux6() {
-    List<Integer> hotelIds = Arrays.asList(1,2,3,4,5);
+    List<Integer> itemIds = Arrays.asList(1,2,3,4,5);
 
-    Flux<String> namesFlux = Flux.fromIterable(hotelIds)
+    Flux<String> namesFlux = Flux.fromIterable(itemIds)
       .window(2) //Flux<Flux<String>> {1,2} {3,4} {5}
       .flatMap((s) -> {
-          return s.map(this::getDataFromLPAS).subscribeOn(Schedulers.parallel()) //Flux<List<String>>
+          return s.map(this::getDataFromRemoteWebService).subscribeOn(Schedulers.parallel()) //Flux<List<String>>
             .flatMap((t) -> {
               return Flux.fromIterable(t);
             });
@@ -112,12 +112,12 @@ public class fluxAndMonoTransformTest {
 
   @Test
   public void testFlux7() {
-    List<Integer> hotelIds = Arrays.asList(1,2,3,4,5);
+    List<Integer> itemIds = Arrays.asList(1,2,3,4,5);
 
-    Flux<String> namesFlux = Flux.fromIterable(hotelIds)
+    Flux<String> namesFlux = Flux.fromIterable(itemIds)
       .window(2) //Flux<Flux<String>> {1,2} {3,4} {5}
       .flatMapSequential((s) ->
-        s.map(this::getDataFromLPAS).subscribeOn(Schedulers.parallel()) //Flux<List<String>>
+        s.map(this::getDataFromRemoteWebService).subscribeOn(Schedulers.parallel()) //Flux<List<String>>
           .flatMap(t -> Flux.fromIterable(t))) //Flux<String>
       .log();
 
@@ -127,14 +127,14 @@ public class fluxAndMonoTransformTest {
   }
 
 
-  private List<String> getDataFromLPAS(Integer hotelId) {
+  private List<String> getDataFromRemoteWebService(Integer itemId) {
     try {
       Thread.sleep(1000);
     } catch (Exception e) {
       e.printStackTrace();
     }
 
-    return Arrays.asList("NEW STR" + hotelId);
+    return Arrays.asList("NEW STR" + itemId);
   }
 
   private List<String> convert(String s) {
