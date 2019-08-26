@@ -94,18 +94,15 @@ public class fluxAndMonoTransformTest {
   public void testFlux6() {
     List<Integer> itemIds = Arrays.asList(1,2,3,4,5);
 
-    Flux<String> namesFlux = Flux.fromIterable(itemIds)
-      .window(2) //Flux<Flux<String>> {1,2} {3,4} {5}
-      .flatMap((s) -> {
-          return s.map(this::getDataFromRemoteWebService).subscribeOn(Schedulers.parallel()) //Flux<List<String>>
-            .flatMap((t) -> {
-              return Flux.fromIterable(t);
-            });
-        }
-        ) //Flux<String>
+    Flux<List<String>> namesFlux = Flux.fromIterable(itemIds)
+      .window(3) //Flux<Flux<Integer>> {1,2} {3,4} {5}
+      .flatMap((s) -> s.map(integer -> this.getDataFromRemoteWebService(integer)).subscribeOn(Schedulers.parallel())) //Flux<String>
       .log();
 
-    StepVerifier.create(namesFlux)
+    Flux<String> outputFlux = namesFlux.flatMap(strings -> {
+      return Flux.fromIterable(strings);
+    });
+    StepVerifier.create(outputFlux)
       .expectNextCount(5)
       .verifyComplete();
   }
